@@ -1,0 +1,93 @@
+.footer {
+  background-color: var(--color-white);
+  color: var(--color-navy);
+  padding-top: 60px;
+  margin-top: auto;
+  border-top: 1px solid var(--color-light-gray);
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.logoWrapper {
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.logoImage {
+  object-fit: contain;
+}
+
+.desc {
+  color: var(--color-dark-gray);
+  line-height: 1.6;
+  font-size: 14px;
+  max-width: 300px;
+}
+
+.title {
+  color: var(--color-navy);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.list a {
+  color: var(--color-navy);
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+
+.list a:hover {
+  opacity: 0.8;
+}
+
+.contactList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contactList li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-navy);
+  font-size: 14px;
+}
+
+.contactList a {
+  color: var(--color-navy);
+  transition: opacity 0.2s;
+}
+
+.contactList a:hover {
+  opacity: 0.8;
+}
+
+.bottom {
+  border-top: 1px solid var(--color-light-gray);
+  padding: 20px 0;
+  text-align: center;
+  color: var(--color-dark-gray);
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}

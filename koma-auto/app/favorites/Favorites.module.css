@@ -1,0 +1,129 @@
+.favoritesPage {
+  padding: 40px 16px;
+}
+
+.emptyState {
+  padding: 100px 16px;
+  text-align: center;
+}
+
+.emptyState h2 {
+  font-size: 32px;
+  color: var(--color-navy);
+  margin-bottom: 16px;
+}
+
+.emptyState p {
+  color: #666;
+  margin-bottom: 32px;
+  font-size: 18px;
+}
+
+.continueBtn {
+  display: inline-block;
+  background-color: var(--color-navy);
+  color: var(--color-white);
+  padding: 16px 32px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.continueBtn:hover {
+  background-color: #041058;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 32px;
+  color: var(--color-navy);
+}
+
+.count {
+  font-size: 16px;
+  color: #888;
+}
+
+.productsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .productsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .productsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .productsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.pageBtn {
+  background-color: var(--color-navy);
+  color: var(--color-white);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  transition: opacity 0.2s, background-color 0.2s;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.pageBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -200%;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.05) 30%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0.05) 70%, transparent 100%);
+  transition: left 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.pageBtn:not(:disabled):hover::before {
+  left: 200%;
+}
+
+.pageBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageBtn:not(:disabled):hover {
+  background-color: #041058;
+}
+
+.pageInfo {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-navy);
+}
