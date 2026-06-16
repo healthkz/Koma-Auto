@@ -249,8 +249,6 @@ export default function CatalogClient() {
               className={styles.sortSelect}
             >
               <option value="popular">По популярности</option>
-              <option value="price_asc">Сначала дешевые</option>
-              <option value="price_desc">Сначала дорогие</option>
             </select>
           </div>
         </div>
@@ -272,32 +270,6 @@ export default function CatalogClient() {
           </div>
 
 
-
-          <div className={styles.filterGroup}>
-            <h4 className={styles.filterTitle}>Категория</h4>
-            <div className={styles.radioList}>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="category"
-                  checked={selectedCategory === ''}
-                  onChange={() => setSelectedCategory('')}
-                />
-                Все категории
-              </label>
-              {categories.map((c) => (
-                <label key={c.id} className={styles.radioLabel}>
-                  <input
-                    type="radio"
-                    name="category"
-                    checked={selectedCategory === c.name || selectedCategory === c.id}
-                    onChange={() => setSelectedCategory(c.name)}
-                  />
-                  {c.name}
-                </label>
-              ))}
-            </div>
-          </div>
 
           <div className={styles.filterGroup}>
             <h4 className={styles.filterTitle}>Бренд</h4>
@@ -339,6 +311,32 @@ export default function CatalogClient() {
                 />
                 Только товары в наличии
               </label>
+            </div>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <h4 className={styles.filterTitle}>Категория</h4>
+            <div className={styles.radioList}>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="category"
+                  checked={selectedCategory === ''}
+                  onChange={() => setSelectedCategory('')}
+                />
+                Все категории
+              </label>
+              {categories.map((c) => (
+                <label key={c.id} className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="category"
+                    checked={selectedCategory === c.name || selectedCategory === c.id}
+                    onChange={() => setSelectedCategory(c.name)}
+                  />
+                  {c.name}
+                </label>
+              ))}
             </div>
           </div>
         </aside>

@@ -6,6 +6,7 @@ import CarBrands from '../components/CarBrands/CarBrands';
 import { getProducts, mapMoySkladToProduct } from '../lib/moysklad';
 import { Product } from '../data/products';
 import SideSlider from '../components/SideSlider/SideSlider';
+import HomeConsultationForm from '../components/HomeConsultationForm/HomeConsultationForm';
 
 export const revalidate = 3600; // Revalidate every hour to shuffle featured products
 
@@ -95,27 +96,7 @@ export default async function Home() {
         <section className={styles.bottomInfoSection}>
           {/* Consultation Form Block */}
           <div className={styles.infoBlock}>
-            <div className={styles.infoCard}>
-              <h3 className={styles.infoTitle}>Онлайн консультация для подбора автозапчастей:</h3>
-              <div className={styles.formGroup}>
-                <div className={styles.inputWrapper}>
-                  <User size={32} className={styles.inputIcon} />
-                  <input type="text" placeholder="Как к вам обращаться?..." className={styles.infoInput} />
-                </div>
-                <div className={styles.inputWrapper}>
-                  <Phone size={32} className={styles.inputIcon} />
-                  <input type="tel" placeholder="Ваш контактный номер телефона..." className={styles.infoInput} />
-                </div>
-                <div className={styles.inputWrapper}>
-                  <CarFront size={32} className={styles.inputIcon} />
-                  <input type="text" placeholder="Введите вин-код (кузов) вашего автомобиля..." className={styles.infoInput} />
-                </div>
-                <button className={styles.fullWidthSubmitBtn}>
-                  <span className={styles.fullWidthBtnText}>Отправить</span>
-                  <MessageSquareText size={20} className={styles.submitBtnIcon} />
-                </button>
-              </div>
-            </div>
+            <HomeConsultationForm />
           </div>
 
           {/* Store Location Block */}
@@ -127,7 +108,7 @@ export default async function Home() {
                   <MapPin size={32} className={styles.locationIcon} />
                   <div className={styles.locationText}>
                     <strong>Наше местоположение:</strong>
-                    <span>г. Алматы, ТЦ Car City, 138 Бутик, <br className={styles.desktopBr} /> 4 Ярус</span>
+                    <span>г. Алматы, ТЦ Car City, 172 Бутик, <br className={styles.desktopBr} /> 4 Ярус</span>
                   </div>
                 </div>
                 <div className={styles.carCityLogoWrapper}>

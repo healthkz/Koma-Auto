@@ -6,6 +6,10 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Search, ShoppingCart, Menu, User, Store } from 'lucide-react';
 import { useCartStore } from '../../store/useCartStore';
+import { useAuthStore } from '../../store/useAuthStore';
+import { auth, db } from '../../lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import styles from './Header.module.css';
 
 export default function Header() {
@@ -13,12 +17,38 @@ export default function Header() {
   const router = useRouter();
 
   const cartItemsCount = useCartStore((state) => state.getTotalItems());
+  const { user, setUser, setUserProfile, isLoading: isAuthLoading, setLoading: setAuthLoading } = useAuthStore();
 
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    
+    // Listen for Firebase Auth state changes
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      
+      if (currentUser) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+          if (userDoc.exists()) {
+            setUserProfile(userDoc.data() as any);
+          } else {
+            setUserProfile(null);
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          setUserProfile(null);
+        }
+      } else {
+        setUserProfile(null);
+      }
+      
+      setAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [setUser, setAuthLoading]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,14 +110,18 @@ export default function Header() {
         </button>
 
         {/* User Block */}
-        <div className={styles.userBlock}>
+        <Link href="/profile" className={styles.userBlock}>
           <div className={styles.userIconWrapper}>
             <User size={20} color="#fff" />
           </div>
-          <Link href="/auth" className={styles.userText}>
-            Регистрация / Вход в аккаунт
-          </Link>
-        </div>
+          <span className={styles.userText}>
+            {isMounted && !isAuthLoading && user ? (
+              user.displayName || user.email || 'Мой профиль'
+            ) : (
+              'Регистрация / Вход в аккаунт'
+            )}
+          </span>
+        </Link>
 
         {/* Cart Block */}
         <Link href="/cart" className={styles.cartBtn}>

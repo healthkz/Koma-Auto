@@ -45,7 +45,7 @@ export default function Footer() {
             </li>
             <li>
               <MapPin size={18} />
-              <span>г. Алматы, ТЦ Car City, 4 ярус 138 бутик</span>
+              <span>г. Алматы, ТЦ Car City, 4 ярус 172 бутик</span>
             </li>
           </ul>
         </div>

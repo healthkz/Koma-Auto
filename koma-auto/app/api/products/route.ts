@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { getProducts, getProductFolders, mapMoySkladToProduct, fetchMoySklad } from '@/lib/moysklad';
 import { products as fallbackProducts } from '@/data/products';
 
-import { CATEGORY_MAPPINGS } from '@/lib/categoryMapping';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,25 +20,9 @@ export async function GET(request: Request) {
     
     if (category) {
       const foldersRes = await getProductFolders();
-      // Look up mapping for the category name
-      const mappedSubcategories = CATEGORY_MAPPINGS[category];
-      
-      if (mappedSubcategories && mappedSubcategories.length > 0) {
-        // Find hrefs for all mapped subcategories
-        const hrefs = foldersRes.rows
-          .filter((f: any) => mappedSubcategories.includes(f.name.trim()))
-          .map((f: any) => f.meta?.href)
-          .filter(Boolean);
-          
-        if (hrefs.length > 0) {
-          categoryHref = hrefs;
-        }
-      } else {
-        // Fallback for single category match if not in mappings or empty
-        const folder = foldersRes.rows.find((f: any) => f.name.toLowerCase() === category.toLowerCase() || f.id === category);
-        if (folder && folder.meta) {
-          categoryHref = folder.meta.href;
-        }
+      const folder = foldersRes.rows.find((f: any) => f.name.toLowerCase() === category.toLowerCase() || f.id === category);
+      if (folder && folder.meta) {
+        categoryHref = folder.meta.href;
       }
     }
 

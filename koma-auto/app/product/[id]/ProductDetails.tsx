@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, Heart, Shield, Truck, CornerUpLeft, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShoppingCart, Heart, Box, Truck, CornerUpLeft, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Product } from '../../../data/products';
 import { useCartStore } from '../../../store/useCartStore';
 import { useFavoritesStore } from '../../../store/useFavoritesStore';
@@ -244,10 +244,10 @@ export default function ProductDetails({ id }: { id: string }) {
 
           <div className={styles.benefits}>
             <div className={styles.benefit}>
-              <Shield size={24} />
+              <Box size={24} />
               <div>
-                <h4>Гарантия</h4>
-                <p>На установку</p>
+                <h4>Новая запчасть</h4>
+                <p>Поставляется в транспортировочной упаковке</p>
               </div>
             </div>
             <div className={styles.benefit}>
