@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToastStore } from '../../store/useToastStore';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -10,7 +10,9 @@ import {
   updateProfile,
   signOut,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  updatePassword,
+  deleteUser
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
@@ -27,6 +29,9 @@ export default function ProfileClient() {
   const [clientType, setClientType] = useState('retail');
   const [isLoading, setIsLoading] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isNameInitialized, setIsNameInitialized] = useState(false);
+  const [completePassword, setCompletePassword] = useState('');
+  const [completeConfirmPassword, setCompleteConfirmPassword] = useState('');
   
   // Edit state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -34,12 +39,87 @@ export default function ProfileClient() {
   const [editDob, setEditDob] = useState('');
   const [editClientType, setEditClientType] = useState('retail');
 
+  // Validation errors state
+  const [errors, setErrors] = useState<{name?: string, dob?: string}>({});
+
   const { user, userProfile, isLoading: isAuthLoading, setUserProfile } = useAuthStore();
   const { addToast } = useToastStore();
   const router = useRouter();
 
+  const validateFullName = (fullName: string) => {
+    const trimmed = fullName.trim();
+    if (!trimmed.includes(' ') || trimmed.length < 8) {
+      return 'Пожалуйста, введите Имя и Фамилию через пробел, полным значением (не менее 8 символов)';
+    }
+    return '';
+  };
+
+  const getMin18Date = () => {
+    const today = new Date();
+    today.setFullYear(today.getFullYear() - 18);
+    return today.toISOString().split('T')[0];
+  };
+
+  const validateDob = (dobString: string) => {
+    if (!dobString) return '';
+    const dobDate = new Date(dobString);
+    const min18Date = new Date();
+    min18Date.setFullYear(min18Date.getFullYear() - 18);
+    if (dobDate > min18Date) {
+      return 'Вам должно быть не менее 18 лет.';
+    }
+    return '';
+  };
+
+  useEffect(() => {
+    if (user && user.displayName && !isNameInitialized) {
+      setName(user.displayName);
+      setIsNameInitialized(true);
+    }
+  }, [user, isNameInitialized]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Custom empty field validation
+    const newErrors: {name?: string, dob?: string, email?: string, password?: string, confirmPassword?: string} = {};
+    let hasEmptyFields = false;
+
+    if (activeTab === 'login') {
+      if (!email.trim()) { newErrors.email = 'Заполните это поле'; hasEmptyFields = true; }
+      if (!password) { newErrors.password = 'Заполните это поле'; hasEmptyFields = true; }
+    } else {
+      if (!name.trim()) { newErrors.name = 'Заполните это поле'; hasEmptyFields = true; }
+      if (!dob) { newErrors.dob = 'Заполните это поле'; hasEmptyFields = true; }
+      if (!email.trim()) { newErrors.email = 'Заполните это поле'; hasEmptyFields = true; }
+      if (!password) { newErrors.password = 'Заполните это поле'; hasEmptyFields = true; }
+      if (!confirmPassword) { newErrors.confirmPassword = 'Заполните это поле'; hasEmptyFields = true; }
+
+      if (password && confirmPassword && password !== confirmPassword) {
+        newErrors.confirmPassword = 'Пароли не совпадают';
+      }
+
+      if (name.trim()) {
+        const nameErr = validateFullName(name);
+        if (nameErr) newErrors.name = nameErr;
+      }
+      
+      if (dob) {
+        const dobErr = validateDob(dob);
+        if (dobErr) newErrors.dob = dobErr;
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      if (hasEmptyFields) {
+        addToast('Пожалуйста, заполните все обязательные поля', 'error');
+      } else {
+        addToast('Пожалуйста, исправьте ошибки в форме', 'error');
+      }
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -49,11 +129,6 @@ export default function ProfileClient() {
         setEmail('');
         setPassword('');
       } else {
-        if (password !== confirmPassword) {
-          addToast('Пароли не совпадают', 'error');
-          setIsLoading(false);
-          return;
-        }
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         
@@ -61,14 +136,17 @@ export default function ProfileClient() {
           await updateProfile(user, { displayName: name });
         }
 
-        // Save extra data to Firestore
-        await setDoc(doc(db, 'users', user.uid), {
+        const profileData = {
           name: name || '',
           email: user.email,
           dob: dob || '',
           clientType: clientType || 'retail',
           createdAt: new Date().toISOString()
-        });
+        };
+
+        // Save extra data to Firestore
+        await setDoc(doc(db, 'users', user.uid), profileData);
+        setUserProfile(profileData as any);
 
         addToast('Аккаунт успешно создан!', 'success');
         setEmail('');
@@ -97,10 +175,6 @@ export default function ProfileClient() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
-      // Set initial name if available
-      if (user.displayName && !name) {
-        setName(user.displayName);
-      }
       // Note: we do NOT save to Firestore here anymore.
       // The Header listener will fetch the doc, find it missing, and set userProfile to null,
       // which will trigger the "incomplete registration" form.
@@ -139,14 +213,69 @@ export default function ProfileClient() {
     }
   };
 
+  const handleCancelIncompleteRegistration = async () => {
+    if (!user) return;
+    try {
+      setIsLoading(true);
+      await deleteUser(user);
+      addToast('Регистрация отменена', 'success');
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      if (error.code === 'auth/requires-recent-login') {
+        await signOut(auth);
+        addToast('Регистрация прервана', 'success');
+      } else {
+        addToast('Ошибка при отмене регистрации', 'error');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleCompleteRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     
+    const newErrors: {name?: string, dob?: string, password?: string, confirmPassword?: string} = {};
+    let hasEmptyFields = false;
+
+    if (!name.trim()) { newErrors.name = 'Заполните это поле'; hasEmptyFields = true; }
+    if (!dob) { newErrors.dob = 'Заполните это поле'; hasEmptyFields = true; }
+    if (!completePassword) { newErrors.password = 'Заполните это поле'; hasEmptyFields = true; }
+    if (!completeConfirmPassword) { newErrors.confirmPassword = 'Заполните это поле'; hasEmptyFields = true; }
+
+    if (completePassword && completeConfirmPassword && completePassword !== completeConfirmPassword) {
+      newErrors.confirmPassword = 'Пароли не совпадают';
+    }
+
+    if (name.trim()) {
+      const nameErr = validateFullName(name);
+      if (nameErr) newErrors.name = nameErr;
+    }
+    
+    if (dob) {
+      const dobErr = validateDob(dob);
+      if (dobErr) newErrors.dob = dobErr;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      if (hasEmptyFields) {
+        addToast('Пожалуйста, заполните все обязательные поля', 'error');
+      } else {
+        addToast('Пожалуйста, исправьте ошибки в форме', 'error');
+      }
+      return;
+    }
+
     setIsLoading(true);
     try {
+      if (completePassword) {
+        await updatePassword(user, completePassword);
+      }
+
       const profileData = {
-        name: name || user.displayName || '',
+        name: name || '',
         email: user.email,
         dob: dob || '',
         clientType: clientType || 'retail',
@@ -176,6 +305,32 @@ export default function ProfileClient() {
     e.preventDefault();
     if (!user || !userProfile) return;
     
+    const newErrors: {name?: string, dob?: string} = {};
+    let hasEmptyFields = false;
+
+    if (!editName.trim()) { newErrors.name = 'Заполните это поле'; hasEmptyFields = true; }
+    if (!editDob) { newErrors.dob = 'Заполните это поле'; hasEmptyFields = true; }
+
+    if (editName.trim()) {
+      const nameErr = validateFullName(editName);
+      if (nameErr) newErrors.name = nameErr;
+    }
+    
+    if (editDob) {
+      const dobErr = validateDob(editDob);
+      if (dobErr) newErrors.dob = dobErr;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      if (hasEmptyFields) {
+        addToast('Пожалуйста, заполните все обязательные поля', 'error');
+      } else {
+        addToast('Пожалуйста, исправьте ошибки в форме', 'error');
+      }
+      return;
+    }
+
     setIsLoading(true);
     try {
       if (editName && editName !== user.displayName) {
@@ -221,32 +376,73 @@ export default function ProfileClient() {
             <p style={{ textAlign: 'center', marginBottom: '24px', color: 'var(--color-dark-gray)' }}>
               Пожалуйста, заполните недостающие данные для завершения регистрации.
             </p>
-            <form className={styles.form} onSubmit={handleCompleteRegistration}>
+            <form className={styles.form} onSubmit={handleCompleteRegistration} noValidate>
               <div className={styles.inputGroup}>
-                <label htmlFor="complete-name" className={styles.label}>Имя</label>
+                <label htmlFor="complete-name" className={`${styles.label} ${errors.name ? styles.labelError : ''}`}>Имя и Фамилия</label>
                 <input
                   id="complete-name"
                   type="text"
-                  value={name || user.displayName || ''}
-                  onChange={(e) => setName(e.target.value)}
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (errors.name) setErrors(prev => ({ ...prev, name: undefined }));
+                  }}
                   placeholder="Как к вам обращаться?"
-                  className={styles.input}
+                  className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
                   required
                 />
+                {errors.name && <span className={styles.errorText}>{errors.name}</span>}
               </div>
               
               <div className={styles.inputGroup}>
-                <label htmlFor="complete-dob" className={styles.label}>Дата рождения</label>
+                <label htmlFor="complete-dob" className={`${styles.label} ${errors.dob ? styles.labelError : ''}`}>Дата рождения</label>
                 <input
                   id="complete-dob"
                   type="date"
                   value={dob}
-                  onChange={(e) => setDob(e.target.value)}
+                  onChange={(e) => {
+                    setDob(e.target.value);
+                    if (errors.dob) setErrors(prev => ({ ...prev, dob: undefined }));
+                  }}
                   min="1900-01-01"
-                  max={new Date().toISOString().split('T')[0]}
-                  className={styles.input}
+                  max={getMin18Date()}
+                  className={`${styles.input} ${errors.dob ? styles.inputError : ''}`}
                   required
                 />
+                {errors.dob && <span className={styles.errorText}>{errors.dob}</span>}
+              </div>
+              <div className={styles.inputGroup}>
+                <label htmlFor="complete-password" className={`${styles.label} ${errors.password ? styles.labelError : ''}`}>Создайте пароль</label>
+                <input
+                  id="complete-password"
+                  type="password"
+                  value={completePassword}
+                  onChange={(e) => {
+                    setCompletePassword(e.target.value);
+                    if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
+                  }}
+                  placeholder="Введите пароль"
+                  className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+                  required
+                />
+                {errors.password && <span className={styles.errorText}>{errors.password}</span>}
+              </div>
+              
+              <div className={styles.inputGroup}>
+                <label htmlFor="complete-confirmPassword" className={`${styles.label} ${errors.confirmPassword ? styles.labelError : ''}`}>Подтвердите пароль</label>
+                <input
+                  id="complete-confirmPassword"
+                  type="password"
+                  value={completeConfirmPassword}
+                  onChange={(e) => {
+                    setCompleteConfirmPassword(e.target.value);
+                    if (errors.confirmPassword) setErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                  }}
+                  placeholder="Подтвердите пароль"
+                  className={`${styles.input} ${errors.confirmPassword ? styles.inputError : ''}`}
+                  required
+                />
+                {errors.confirmPassword && <span className={styles.errorText}>{errors.confirmPassword}</span>}
               </div>
 
               <div className={styles.inputGroup}>
@@ -265,9 +461,32 @@ export default function ProfileClient() {
               <button 
                 type="submit" 
                 className={styles.submitBtn}
-                disabled={isLoading || !dob}
+                disabled={isLoading}
               >
                 {isLoading ? 'Сохранение...' : 'Завершить регистрацию'}
+              </button>
+              
+              <button 
+                type="button" 
+                onClick={handleCancelIncompleteRegistration}
+                disabled={isLoading}
+                style={{
+                  width: '100%',
+                  marginTop: '12px',
+                  padding: '16px',
+                  backgroundColor: 'transparent',
+                  color: 'var(--color-navy)',
+                  border: '1px solid #dcdfe6',
+                  borderRadius: 'var(--radius-sm)',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--color-navy)'}
+                onMouseOut={(e) => e.currentTarget.style.borderColor = '#dcdfe6'}
+              >
+                Выйти
               </button>
             </form>
           </div>
@@ -304,7 +523,7 @@ export default function ProfileClient() {
               
               <div className={styles.infoList}>
                 <div className={styles.infoItem}>
-                  <span className={styles.infoLabel}>Имя и фамилия</span>
+                  <span className={styles.infoLabel}>Имя и Фамилия</span>
                   <span className={styles.infoValue}>{userProfile.name || user.displayName || 'Не указано'}</span>
                 </div>
                 
@@ -400,31 +619,39 @@ export default function ProfileClient() {
           <div className={styles.modalOverlay} onClick={() => !isLoading && setIsEditModalOpen(false)}>
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ textAlign: 'left' }}>
               <h3 className={styles.modalTitle} style={{ marginBottom: '20px' }}>Редактирование профиля</h3>
-              <form className={styles.form} onSubmit={handleSaveProfile}>
+              <form className={styles.form} onSubmit={handleSaveProfile} noValidate>
                 <div className={styles.inputGroup}>
-                  <label htmlFor="edit-name" className={styles.label}>Имя</label>
+                  <label htmlFor="edit-name" className={`${styles.label} ${errors.name ? styles.labelError : ''}`}>Имя и Фамилия</label>
                   <input
                     id="edit-name"
                     type="text"
                     value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className={styles.input}
+                    onChange={(e) => {
+                      setEditName(e.target.value);
+                      if (errors.name) setErrors(prev => ({ ...prev, name: undefined }));
+                    }}
+                    className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
                     required
                   />
+                  {errors.name && <span className={styles.errorText}>{errors.name}</span>}
                 </div>
                 
                 <div className={styles.inputGroup}>
-                  <label htmlFor="edit-dob" className={styles.label}>Дата рождения</label>
+                  <label htmlFor="edit-dob" className={`${styles.label} ${errors.dob ? styles.labelError : ''}`}>Дата рождения</label>
                   <input
                     id="edit-dob"
                     type="date"
                     value={editDob}
-                    onChange={(e) => setEditDob(e.target.value)}
+                    onChange={(e) => {
+                      setEditDob(e.target.value);
+                      if (errors.dob) setErrors(prev => ({ ...prev, dob: undefined }));
+                    }}
                     min="1900-01-01"
-                    max={new Date().toISOString().split('T')[0]}
-                    className={styles.input}
+                    max={getMin18Date()}
+                    className={`${styles.input} ${errors.dob ? styles.inputError : ''}`}
                     required
                   />
+                  {errors.dob && <span className={styles.errorText}>{errors.dob}</span>}
                 </div>
 
                 <div className={styles.inputGroup}>
@@ -453,7 +680,7 @@ export default function ProfileClient() {
                     type="submit"
                     className={styles.submitBtn} 
                     style={{ flex: 1, margin: 0 }}
-                    disabled={isLoading || !editDob}
+                    disabled={isLoading}
                   >
                     {isLoading ? 'Сохранение...' : 'Сохранить'}
                   </button>
@@ -486,77 +713,97 @@ export default function ProfileClient() {
           </button>
         </div>
 
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <form className={styles.form} onSubmit={handleSubmit} noValidate>
           {activeTab === 'register' && (
             <>
               <div className={styles.inputGroup}>
-                <label htmlFor="name" className={styles.label}>Имя</label>
+                <label htmlFor="name" className={`${styles.label} ${errors.name ? styles.labelError : ''}`}>Имя и Фамилия</label>
                 <input
                   id="name"
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (errors.name) setErrors(prev => ({ ...prev, name: undefined }));
+                  }}
                   placeholder="Как к вам обращаться?"
-                  className={styles.input}
+                  className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
                   required
                 />
+                {errors.name && <span className={styles.errorText}>{errors.name}</span>}
               </div>
               
               <div className={styles.inputGroup}>
-                <label htmlFor="dob" className={styles.label}>Дата рождения</label>
+                <label htmlFor="dob" className={`${styles.label} ${errors.dob ? styles.labelError : ''}`}>Дата рождения</label>
                 <input
                   id="dob"
                   type="date"
                   value={dob}
-                  onChange={(e) => setDob(e.target.value)}
+                  onChange={(e) => {
+                    setDob(e.target.value);
+                    if (errors.dob) setErrors(prev => ({ ...prev, dob: undefined }));
+                  }}
                   min="1900-01-01"
-                  max={new Date().toISOString().split('T')[0]}
-                  className={styles.input}
+                  max={getMin18Date()}
+                  className={`${styles.input} ${errors.dob ? styles.inputError : ''}`}
                   required
                 />
+                {errors.dob && <span className={styles.errorText}>{errors.dob}</span>}
               </div>
             </>
           )}
 
           <div className={styles.inputGroup}>
-            <label htmlFor="email" className={styles.label}>Email или телефон</label>
+            <label htmlFor="email" className={`${styles.label} ${errors.email ? styles.labelError : ''}`}>Email или телефон</label>
             <input
               id="email"
               type="text"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
+              }}
               placeholder="example@mail.ru"
-              className={styles.input}
+              className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
               required
             />
+            {errors.email && <span className={styles.errorText}>{errors.email}</span>}
           </div>
 
           <div className={styles.inputGroup}>
-            <label htmlFor="password" className={styles.label}>Пароль</label>
+            <label htmlFor="password" className={`${styles.label} ${errors.password ? styles.labelError : ''}`}>Пароль</label>
             <input
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
+              }}
               placeholder="Введите пароль"
-              className={styles.input}
+              className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
               required
             />
+            {errors.password && <span className={styles.errorText}>{errors.password}</span>}
           </div>
 
           {activeTab === 'register' && (
             <>
               <div className={styles.inputGroup}>
-                <label htmlFor="confirmPassword" className={styles.label}>Подтвердите пароль</label>
+                <label htmlFor="confirmPassword" className={`${styles.label} ${errors.confirmPassword ? styles.labelError : ''}`}>Подтвердите пароль</label>
                 <input
                   id="confirmPassword"
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (errors.confirmPassword) setErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                  }}
                   placeholder="Подтвердите пароль"
-                  className={styles.input}
+                  className={`${styles.input} ${errors.confirmPassword ? styles.inputError : ''}`}
                   required
                 />
+                {errors.confirmPassword && <span className={styles.errorText}>{errors.confirmPassword}</span>}
               </div>
               
               <div className={styles.thinDivider}></div>
@@ -585,7 +832,7 @@ export default function ProfileClient() {
           <button 
             type="submit" 
             className={styles.submitBtn}
-            disabled={isLoading || !email || !password || (activeTab === 'register' && (!name || !confirmPassword))}
+            disabled={isLoading}
           >
             {isLoading ? 'Загрузка...' : (activeTab === 'login' ? 'Войти в аккаунт' : 'Зарегистрироваться')}
           </button>

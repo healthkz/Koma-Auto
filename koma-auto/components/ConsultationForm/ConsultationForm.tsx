@@ -10,11 +10,29 @@ export default function ConsultationForm() {
   const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errors, setErrors] = useState<{name?: string}>({});
   const { addToast } = useToastStore();
+
+  const validateFullName = (fullName: string) => {
+    const trimmed = fullName.trim();
+    if (!trimmed.includes(' ') || trimmed.length < 8) {
+      return 'Пожалуйста, введите Имя и Фамилию через пробел, полным значением (не менее 8 символов)';
+    }
+    return '';
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (name.trim()) {
+      const nameError = validateFullName(name);
+      if (nameError) {
+        setErrors({ name: nameError });
+        addToast(nameError, 'error');
+        return;
+      }
+    }
+
     if (!phone.trim()) {
       addToast('Пожалуйста, введите номер телефона', 'error');
       return;
@@ -68,15 +86,19 @@ export default function ConsultationForm() {
       ) : (
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
-            <label htmlFor="name" className={styles.label}>Ваше имя</label>
+            <label htmlFor="name" className={`${styles.label} ${errors.name ? styles.labelError : ''}`}>Имя и Фамилия</label>
             <input
               type="text"
               id="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (errors.name) setErrors({});
+              }}
               placeholder="Как к вам обращаться?"
-              className={styles.input}
+              className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
             />
+            {errors.name && <span className={styles.errorText}>{errors.name}</span>}
           </div>
           
           <div className={styles.inputGroup}>

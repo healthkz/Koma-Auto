@@ -5,12 +5,15 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
 import { useCartStore } from '../../store/useCartStore';
+import { useToastStore } from '../../store/useToastStore';
 import styles from './Checkout.module.css';
 
 export default function CheckoutClient() {
   const router = useRouter();
   const { items, getTotalPrice, clearCart } = useCartStore();
+  const { addToast } = useToastStore();
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errors, setErrors] = useState<{name?: string}>({});
 
   const [formData, setFormData] = useState({
     name: '',
@@ -30,8 +33,24 @@ export default function CheckoutClient() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const validateFullName = (fullName: string) => {
+    const trimmed = fullName.trim();
+    if (!trimmed.includes(' ') || trimmed.length < 8) {
+      return 'Пожалуйста, введите Имя и Фамилию через пробел, полным значением (не менее 8 символов)';
+    }
+    return '';
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const nameError = validateFullName(formData.name);
+    if (nameError) {
+      setErrors({ name: nameError });
+      addToast(nameError, 'error');
+      return;
+    }
+
     // Simulate API call
     setTimeout(() => {
       clearCart();
@@ -73,8 +92,19 @@ export default function CheckoutClient() {
             <h2>1. Контактные данные</h2>
             <div className={styles.formGrid}>
               <div className={styles.inputGroup}>
-                <label>Имя и фамилия *</label>
-                <input required type="text" name="name" value={formData.name} onChange={handleChange} />
+                <label className={errors.name ? styles.labelError : ''}>Имя и Фамилия *</label>
+                <input 
+                  required 
+                  type="text" 
+                  name="name" 
+                  value={formData.name} 
+                  onChange={(e) => {
+                    handleChange(e);
+                    if (errors.name) setErrors({});
+                  }} 
+                  className={errors.name ? styles.inputError : ''}
+                />
+                {errors.name && <span className={styles.errorText}>{errors.name}</span>}
               </div>
               <div className={styles.inputGroup}>
                 <label>Телефон *</label>

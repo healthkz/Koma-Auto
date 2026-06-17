@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     const description = `ЗАПРОС КОНСУЛЬТАЦИИ С САЙТА
 
-Имя: ${name || 'Не указано'}
+Имя и Фамилия: ${name || 'Не указано'}
 Телефон: ${phone}
 VIN / Кузов: ${vin || 'Не указан'}
 
