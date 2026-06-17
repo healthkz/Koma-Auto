@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { User, Phone, CarFront, MessageSquareText, Loader2, CheckCircle } from 'lucide-react';
 import styles from '../../app/page.module.css';
 import { useToastStore } from '../../store/useToastStore';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function HomeConsultationForm() {
   const [name, setName] = useState('');
@@ -11,25 +12,118 @@ export default function HomeConsultationForm() {
   const [vin, setVin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errors, setErrors] = useState<{name?: string, phone?: string, vin?: string}>({});
+  
   const { addToast } = useToastStore();
+  const { user, userProfile } = useAuthStore();
+
+  const validateName = (nameStr: string) => {
+    const trimmed = nameStr.trim();
+    if (trimmed.length < 3) {
+      return 'Имя должно содержать не менее 3 символов';
+    }
+    return '';
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '');
+    
+    if (val.length === 0) {
+      setPhone('');
+      return;
+    }
+
+    if (val[0] !== '7' && val[0] !== '8') {
+      val = '7' + val;
+    }
+    if (val.length > 11) val = val.slice(0, 11);
+    
+    let formatted = '';
+    if (val[0] === '7') {
+      formatted = '+7';
+    } else {
+      formatted = '8';
+    }
+
+    if (val.length > 1) formatted += '-' + val.slice(1, 4);
+    if (val.length > 4) formatted += '-' + val.slice(4, 7);
+    if (val.length > 7) formatted += '-' + val.slice(7, 11);
+    
+    setPhone(formatted);
+    if (errors.phone) setErrors(prev => ({ ...prev, phone: undefined }));
+  };
+
+  const handleVinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value.toUpperCase();
+    if (/[А-Яа-яЁё]/.test(rawVal)) {
+      setErrors(prev => ({ ...prev, vin: 'Используйте латинские буквы' }));
+    } else if (errors.vin === 'Используйте латинские буквы') {
+      setErrors(prev => ({ ...prev, vin: undefined }));
+    }
+
+    let val = rawVal.replace(/[^A-Z0-9]/g, '');
+    if (val.length > 17) val = val.slice(0, 17);
+    setVin(val);
+    if (errors.vin && errors.vin !== 'Используйте латинские буквы') {
+      setErrors(prev => ({ ...prev, vin: undefined }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!phone.trim()) {
-      addToast('Пожалуйста, введите номер телефона', 'error');
+    const newErrors: {name?: string, phone?: string, vin?: string} = {};
+    let hasEmptyFields = false;
+
+    if (!name.trim()) { newErrors.name = 'Заполните это поле'; hasEmptyFields = true; }
+    if (!phone) { newErrors.phone = 'Заполните это поле'; hasEmptyFields = true; }
+    if (!vin) { newErrors.vin = 'Заполните это поле'; hasEmptyFields = true; }
+
+    if (name.trim()) {
+      const nameError = validateName(name);
+      if (nameError) newErrors.name = nameError;
+    }
+
+    if (phone) {
+      if (phone.startsWith('+7') && phone.length < 15) {
+        newErrors.phone = 'Введите полный номер телефона';
+      } else if (phone.startsWith('8') && phone.length < 14) {
+        newErrors.phone = 'Введите полный номер телефона';
+      }
+    }
+
+    if (vin && (vin.length < 11 || vin.length > 17)) {
+      newErrors.vin = 'VIN код должен содержать от 11 до 17 символов';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      if (hasEmptyFields) {
+        addToast('Пожалуйста, заполните все обязательные поля', 'error');
+      } else {
+        addToast('Пожалуйста, исправьте ошибки в форме', 'error');
+      }
       return;
     }
 
     setIsLoading(true);
 
     try {
+      let clientInfo = 'Клиент: Гость';
+      if (user) {
+        const typeStr = userProfile?.clientType === 'wholesale' ? 'Оптовый клиент' : 'Розничный клиент';
+        const dobStr = userProfile?.dob || 'Не указана';
+        const createdAtStr = userProfile?.createdAt ? new Date(userProfile.createdAt).toLocaleDateString('ru-RU') : 'Не указана';
+        
+        clientInfo = `Клиент: ${typeStr}\nИмя и Фамилия: ${userProfile?.name || name}\nДата рождения: ${dobStr}\nДата регистрации: ${createdAtStr}\nEmail адрес: ${user.email}`;
+      }
+
       const response = await fetch('/api/consultation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, phone, vin }),
+        body: JSON.stringify({ name, phone, vin, clientInfo }),
       });
 
       if (!response.ok) {
@@ -54,6 +148,14 @@ export default function HomeConsultationForm() {
     }
   };
 
+  const getErrorStyle = (error?: string) => {
+    return error ? { borderColor: '#e53e3e', backgroundColor: '#fef2f2' } : {};
+  };
+
+  const getIconColor = (error?: string) => {
+    return error ? '#e53e3e' : undefined;
+  };
+
   return (
     <div className={styles.infoCard}>
       <h3 className={styles.infoTitle}>Онлайн консультация для подбора автозапчастей:</h3>
@@ -65,42 +167,62 @@ export default function HomeConsultationForm() {
           <p>Ожидайте звонка от нашего специалиста.</p>
         </div>
       ) : (
-        <form className={styles.formGroup} onSubmit={handleSubmit}>
-          <div className={styles.inputWrapper}>
-            <User size={32} className={styles.inputIcon} />
-            <input 
-              type="text" 
-              placeholder="Как к вам обращаться?..." 
-              className={styles.infoInput} 
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+        <form className={styles.formGroup} onSubmit={handleSubmit} noValidate>
+          <div style={{ marginBottom: '16px' }}>
+            <div className={styles.inputWrapper} style={getErrorStyle(errors.name)}>
+              <User size={32} className={styles.inputIcon} color={getIconColor(errors.name)} />
+              <input 
+                type="text" 
+                placeholder="Как к вам обращаться?" 
+                className={styles.infoInput} 
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (errors.name) setErrors(prev => ({ ...prev, name: undefined }));
+                }}
+                required
+                style={errors.name ? { backgroundColor: 'transparent', color: '#e53e3e' } : {}}
+              />
+            </div>
+            {errors.name && <span style={{ color: '#e53e3e', fontSize: '14px', marginTop: '4px', display: 'block' }}>{errors.name}</span>}
           </div>
-          <div className={styles.inputWrapper}>
-            <Phone size={32} className={styles.inputIcon} />
-            <input 
-              type="tel" 
-              placeholder="Ваш контактный номер телефона..." 
-              className={styles.infoInput} 
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-            />
+
+          <div style={{ marginBottom: '16px' }}>
+            <div className={styles.inputWrapper} style={getErrorStyle(errors.phone)}>
+              <Phone size={32} className={styles.inputIcon} color={getIconColor(errors.phone)} />
+              <input 
+                type="tel" 
+                placeholder="Ваш номер телефона" 
+                className={styles.infoInput} 
+                value={phone}
+                onChange={handlePhoneChange}
+                required
+                style={errors.phone ? { backgroundColor: 'transparent', color: '#e53e3e' } : {}}
+              />
+            </div>
+            {errors.phone && <span style={{ color: '#e53e3e', fontSize: '14px', marginTop: '4px', display: 'block' }}>{errors.phone}</span>}
           </div>
-          <div className={styles.inputWrapper}>
-            <CarFront size={32} className={styles.inputIcon} />
-            <input 
-              type="text" 
-              placeholder="Введите вин-код (кузов) вашего автомобиля..." 
-              className={styles.infoInput} 
-              value={vin}
-              onChange={(e) => setVin(e.target.value)}
-            />
+
+          <div style={{ marginBottom: '16px' }}>
+            <div className={styles.inputWrapper} style={getErrorStyle(errors.vin)}>
+              <CarFront size={32} className={styles.inputIcon} color={getIconColor(errors.vin)} />
+              <input 
+                type="text" 
+                placeholder="Введите VIN-код" 
+                className={styles.infoInput} 
+                value={vin}
+                onChange={handleVinChange}
+                required
+                style={errors.vin ? { backgroundColor: 'transparent', color: '#e53e3e' } : {}}
+              />
+            </div>
+            {errors.vin && <span style={{ color: '#e53e3e', fontSize: '14px', marginTop: '4px', display: 'block' }}>{errors.vin}</span>}
           </div>
+
           <button 
             type="submit" 
             className={styles.fullWidthSubmitBtn}
-            disabled={isLoading || !phone.trim()}
+            disabled={isLoading}
           >
             <span className={styles.fullWidthBtnText}>
               {isLoading ? 'Отправка...' : 'Отправить'}

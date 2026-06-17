@@ -6,7 +6,7 @@ const MOYSKLAD_TOKEN = process.env.MOYSKLAD_TOKEN;
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, phone, vin } = body;
+    const { name, phone, vin, clientInfo } = body;
 
     if (!phone) {
       return NextResponse.json({ error: 'Phone is required' }, { status: 400 });
@@ -19,9 +19,11 @@ export async function POST(request: Request) {
 
     const description = `ЗАПРОС КОНСУЛЬТАЦИИ С САЙТА
 
-Имя и Фамилия: ${name || 'Не указано'}
+${clientInfo || 'Клиент: Гость'}
 Телефон: ${phone}
 VIN / Кузов: ${vin || 'Не указан'}
+
+Указанное имя для обращения: ${name || 'Не указано'}
 
 Пожалуйста, свяжитесь с клиентом для подбора запчасти.`;
 
