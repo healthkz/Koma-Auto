@@ -40,7 +40,7 @@ export default function ProfileClient() {
   const [editClientType, setEditClientType] = useState('retail');
 
   // Validation errors state
-  const [errors, setErrors] = useState<{name?: string, dob?: string}>({});
+  const [errors, setErrors] = useState<{name?: string, dob?: string, email?: string, password?: string, confirmPassword?: string}>({});
 
   const { user, userProfile, isLoading: isAuthLoading, setUserProfile } = useAuthStore();
   const { addToast } = useToastStore();
