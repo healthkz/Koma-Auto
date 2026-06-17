@@ -158,7 +158,7 @@ export default function HomeConsultationForm() {
 
   return (
     <div className={styles.infoCard}>
-      <h3 className={styles.infoTitle}>Онлайн консультация для подбора автозапчастей:</h3>
+      <h3 className={styles.infoTitle} style={{ marginBottom: '20px' }}>Онлайн консультация для подбора автозапчастей:</h3>
       
       {isSuccess ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', color: 'var(--color-navy)', padding: '40px 0' }}>
@@ -168,7 +168,7 @@ export default function HomeConsultationForm() {
         </div>
       ) : (
         <form className={styles.formGroup} onSubmit={handleSubmit} noValidate>
-          <div style={{ marginBottom: '16px' }}>
+          <div>
             <div className={styles.inputWrapper} style={getErrorStyle(errors.name)}>
               <User size={32} className={styles.inputIcon} color={getIconColor(errors.name)} />
               <input 
@@ -187,7 +187,7 @@ export default function HomeConsultationForm() {
             {errors.name && <span style={{ color: '#e53e3e', fontSize: '14px', marginTop: '4px', display: 'block' }}>{errors.name}</span>}
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
+          <div>
             <div className={styles.inputWrapper} style={getErrorStyle(errors.phone)}>
               <Phone size={32} className={styles.inputIcon} color={getIconColor(errors.phone)} />
               <input 
@@ -203,7 +203,7 @@ export default function HomeConsultationForm() {
             {errors.phone && <span style={{ color: '#e53e3e', fontSize: '14px', marginTop: '4px', display: 'block' }}>{errors.phone}</span>}
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
+          <div>
             <div className={styles.inputWrapper} style={getErrorStyle(errors.vin)}>
               <CarFront size={32} className={styles.inputIcon} color={getIconColor(errors.vin)} />
               <input 
