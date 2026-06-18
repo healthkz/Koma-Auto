@@ -4,6 +4,7 @@ import "./globals.css";
 import ToastProvider from "../components/ui/ToastProvider";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
+import SyncProvider from "../components/SyncProvider/SyncProvider";
 
 const geistSans = localFont({
   src: "../Geist/Geist-VariableFont_wght.ttf",
@@ -30,6 +31,7 @@ export default function RootLayout({
         </main>
         <Footer />
         <ToastProvider />
+        <SyncProvider />
       </body>
     </html>
   );

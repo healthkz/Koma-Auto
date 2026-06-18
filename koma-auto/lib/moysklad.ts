@@ -122,6 +122,30 @@ export async function getProduct(id: string): Promise<MoySkladProduct> {
 
 // Removed getStockAll as assortment endpoint returns stock natively
 
+export async function getProductsByIds(ids: string[]): Promise<Product[]> {
+  if (!ids || ids.length === 0) return [];
+  
+  const chunkSize = 20;
+  const allProducts: Product[] = [];
+  
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    const chunk = ids.slice(i, i + chunkSize);
+    const filterStr = chunk.map(id => `id=${id}`).join(';');
+    try {
+      const res = await fetchMoySklad<MoySkladListResponse<MoySkladProduct>>(
+        `/entity/assortment?limit=100&filter=${filterStr}&expand=images,productFolder,supplier`
+      );
+      if (res.rows) {
+        allProducts.push(...res.rows.map(mapMoySkladToProduct));
+      }
+    } catch (e) {
+      console.error('Error fetching batch products chunk:', e);
+    }
+  }
+  
+  return allProducts;
+}
+
 export async function getProductFolders(): Promise<MoySkladListResponse<MoySkladProductFolder>> {
   return fetchMoySklad<MoySkladListResponse<MoySkladProductFolder>>(`/entity/productfolder`);
 }

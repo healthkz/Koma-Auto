@@ -17,7 +17,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
-import { User as UserIcon, Mail, Calendar, Briefcase, Clock, LogOut, Package, Pencil } from 'lucide-react';
+import { User as UserIcon, Mail, Calendar, Briefcase, Clock, LogOut, Package, Pencil, Eye, EyeOff } from 'lucide-react';
 import styles from './Profile.module.css';
 
 export default function ProfileClient() {
@@ -34,6 +34,8 @@ export default function ProfileClient() {
   const [completePassword, setCompletePassword] = useState('');
   const [completeConfirmPassword, setCompleteConfirmPassword] = useState('');
   const [isConsentAccepted, setIsConsentAccepted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isReauthModalOpen, setIsReauthModalOpen] = useState(false);
   
   // Edit state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -52,6 +54,9 @@ export default function ProfileClient() {
     const trimmed = fullName.trim();
     if (!trimmed.includes(' ') || trimmed.length < 8) {
       return 'Пожалуйста, введите Имя и Фамилию через пробел, полным значением (не менее 8 символов)';
+    }
+    if (trimmed.length > 50) {
+      return 'Длина имени не должна превышать 50 символов';
     }
     return '';
   };
@@ -79,6 +84,26 @@ export default function ProfileClient() {
       setIsNameInitialized(true);
     }
   }, [user, isNameInitialized]);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    // If user is logged in but profile is not complete, start 5 min timer
+    if (user && !userProfile) {
+      timeoutId = setTimeout(async () => {
+        try {
+          await signOut(auth);
+          addToast('Время на завершение регистрации истекло. Пожалуйста, авторизуйтесь заново.', 'error');
+        } catch (e) {
+          console.error(e);
+        }
+      }, 5 * 60 * 1000); // 5 minutes
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [user, userProfile, addToast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -298,9 +323,13 @@ export default function ProfileClient() {
       setUserProfile(profileData as any);
       setIsLogoutModalOpen(false);
       addToast('Регистрация успешно завершена!', 'success');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error completing registration:', error);
-      addToast('Ошибка при сохранении данных', 'error');
+      if (error.code === 'auth/requires-recent-login') {
+        setIsReauthModalOpen(true);
+      } else {
+        addToast('Ошибка при сохранении данных', 'error');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -402,6 +431,7 @@ export default function ProfileClient() {
                   }}
                   placeholder="Как к вам обращаться?"
                   className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
+                  maxLength={50}
                   required
                 />
                 {errors.name && <span className={styles.errorText}>{errors.name}</span>}
@@ -426,18 +456,23 @@ export default function ProfileClient() {
               </div>
               <div className={styles.inputGroup}>
                 <label htmlFor="complete-password" className={`${styles.label} ${errors.password ? styles.labelError : ''}`}>Создайте пароль</label>
-                <input
-                  id="complete-password"
-                  type="password"
-                  value={completePassword}
-                  onChange={(e) => {
-                    setCompletePassword(e.target.value);
-                    if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
-                  }}
-                  placeholder="Введите пароль"
-                  className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-                  required
-                />
+                <div className={styles.passwordWrapper}>
+                  <input
+                    id="complete-password"
+                    type={showPassword ? "text" : "password"}
+                    value={completePassword}
+                    onChange={(e) => {
+                      setCompletePassword(e.target.value);
+                      if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
+                    }}
+                    placeholder="Введите пароль"
+                    className={`${styles.input} ${styles.passwordInput} ${errors.password ? styles.inputError : ''}`}
+                    required
+                  />
+                  <button type="button" className={styles.passwordToggle} onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
                 {errors.password && <span className={styles.errorText}>{errors.password}</span>}
               </div>
               
@@ -445,7 +480,7 @@ export default function ProfileClient() {
                 <label htmlFor="complete-confirmPassword" className={`${styles.label} ${errors.confirmPassword ? styles.labelError : ''}`}>Подтвердите пароль</label>
                 <input
                   id="complete-confirmPassword"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={completeConfirmPassword}
                   onChange={(e) => {
                     setCompleteConfirmPassword(e.target.value);
@@ -516,6 +551,30 @@ export default function ProfileClient() {
               </button>
             </form>
           </div>
+
+          {/* Reauth Modal */}
+          {isReauthModalOpen && (
+            <div className={styles.modalOverlay} onClick={() => setIsReauthModalOpen(false)}>
+              <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                <h3 className={styles.modalTitle}>Сессия устарела</h3>
+                <p className={styles.modalText}>
+                  В целях безопасности Firebase требует недавней авторизации для установки пароля. Пожалуйста, войдите снова (это займёт пару секунд), чтобы завершить регистрацию.
+                </p>
+                <div className={styles.modalActions}>
+                  <button 
+                    className={styles.modalConfirmBtn} 
+                    onClick={async () => {
+                      setIsReauthModalOpen(false);
+                      await handleSignOut();
+                    }}
+                    style={{ width: '100%' }}
+                  >
+                    Понятно, перезайти
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
@@ -657,6 +716,7 @@ export default function ProfileClient() {
                       if (errors.name) setErrors(prev => ({ ...prev, name: undefined }));
                     }}
                     className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
+                    maxLength={50}
                     required
                   />
                   {errors.name && <span className={styles.errorText}>{errors.name}</span>}
@@ -754,6 +814,7 @@ export default function ProfileClient() {
                   }}
                   placeholder="Как к вам обращаться?"
                   className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
+                  maxLength={50}
                   required
                 />
                 {errors.name && <span className={styles.errorText}>{errors.name}</span>}
@@ -798,18 +859,23 @@ export default function ProfileClient() {
 
           <div className={styles.inputGroup}>
             <label htmlFor="password" className={`${styles.label} ${errors.password ? styles.labelError : ''}`}>Пароль</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
-              }}
-              placeholder="Введите пароль"
-              className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-              required
-            />
+            <div className={styles.passwordWrapper}>
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors(prev => ({ ...prev, password: undefined }));
+                }}
+                placeholder="Введите пароль"
+                className={`${styles.input} ${styles.passwordInput} ${errors.password ? styles.inputError : ''}`}
+                required
+              />
+              <button type="button" className={styles.passwordToggle} onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             {errors.password && <span className={styles.errorText}>{errors.password}</span>}
           </div>
 
@@ -819,7 +885,7 @@ export default function ProfileClient() {
                 <label htmlFor="confirmPassword" className={`${styles.label} ${errors.confirmPassword ? styles.labelError : ''}`}>Подтвердите пароль</label>
                 <input
                   id="confirmPassword"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => {
                     setConfirmPassword(e.target.value);

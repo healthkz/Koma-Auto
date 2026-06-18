@@ -6,6 +6,7 @@ interface FavoritesState {
   items: Product[];
   toggleFavorite: (product: Product) => void;
   isFavorite: (productId: string) => boolean;
+  setItems: (items: Product[]) => void;
 }
 
 export const useFavoritesStore = create<FavoritesState>()(
@@ -24,6 +25,7 @@ export const useFavoritesStore = create<FavoritesState>()(
       isFavorite: (productId) => {
         return get().items.some((item) => item.id === productId);
       },
+      setItems: (items) => set({ items }),
     }),
     {
       name: 'koma-favorites-storage',
