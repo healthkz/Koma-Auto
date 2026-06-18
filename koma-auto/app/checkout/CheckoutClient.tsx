@@ -44,6 +44,11 @@ export default function CheckoutClient() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    addToast('Сервис временно недоступен, повторите позже', 'error');
+    return;
+
+    // Uncomment below to restore functionality later
+    /*
     const nameError = validateFullName(formData.name);
     if (nameError) {
       setErrors({ name: nameError });
@@ -56,6 +61,7 @@ export default function CheckoutClient() {
       clearCart();
       setIsSuccess(true);
     }, 1000);
+    */
   };
 
   if (isSuccess) {
