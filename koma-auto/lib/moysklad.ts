@@ -6,6 +6,9 @@ const TOKEN = process.env.MOYSKLAD_TOKEN;
 const LOGIN = process.env.MOYSKLAD_LOGIN;
 const PASSWORD = process.env.MOYSKLAD_PASSWORD;
 
+// The main store URL for "Car City 1 ярус Подвал"
+const MAIN_STORE_URL = 'https://api.moysklad.ru/api/remap/1.2/entity/store/4240a87a-4ea5-11f1-0a80-1b5c0008497a';
+
 export function getMoySkladAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     'Accept-Encoding': 'gzip',
@@ -88,7 +91,7 @@ export async function getProducts(
     filters.push(`search=${encodeURIComponent(search)}`);
   }
 
-  let url = `/entity/assortment?limit=${limit}&offset=${offset}&expand=images,productFolder,supplier`;
+  let url = `/entity/assortment?limit=${limit}&offset=${offset}&expand=images,productFolder,supplier&stockStore=${encodeURIComponent(MAIN_STORE_URL)}`;
   
   if (filters.length > 0) {
     url += `&filter=${filters.join(';')}`;
@@ -98,7 +101,7 @@ export async function getProducts(
 }
 
 export async function getProduct(id: string): Promise<MoySkladProduct> {
-  const res = await fetchMoySklad<MoySkladListResponse<MoySkladProduct>>(`/entity/assortment?limit=1&filter=id=${id}&expand=images,productFolder,supplier`);
+  const res = await fetchMoySklad<MoySkladListResponse<MoySkladProduct>>(`/entity/assortment?limit=1&filter=id=${id}&expand=images,productFolder,supplier&stockStore=${encodeURIComponent(MAIN_STORE_URL)}`);
   if (!res.rows || res.rows.length === 0) {
     throw new Error(`Product with id ${id} not found in assortment`);
   }
@@ -133,7 +136,7 @@ export async function getProductsByIds(ids: string[]): Promise<Product[]> {
     const filterStr = chunk.map(id => `id=${id}`).join(';');
     try {
       const res = await fetchMoySklad<MoySkladListResponse<MoySkladProduct>>(
-        `/entity/assortment?limit=100&filter=${filterStr}&expand=images,productFolder,supplier`
+        `/entity/assortment?limit=100&filter=${filterStr}&expand=images,productFolder,supplier&stockStore=${encodeURIComponent(MAIN_STORE_URL)}`
       );
       if (res.rows) {
         allProducts.push(...res.rows.map(mapMoySkladToProduct));

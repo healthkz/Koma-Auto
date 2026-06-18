@@ -28,7 +28,7 @@ export default function CatalogClient() {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedBrand, setSelectedBrand] = useState('');
   const [onlyOriginals, setOnlyOriginals] = useState(false);
-  const [inStockOnly, setInStockOnly] = useState(false);
+  const [showOutOfStock, setShowOutOfStock] = useState(false);
   const [sort, setSort] = useState('popular');
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [mobileGridColumns, setMobileGridColumns] = useState<1 | 2>(2);
@@ -77,12 +77,11 @@ export default function CatalogClient() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  // Reset pagination when filters change
   useEffect(() => {
     setProducts([]);
     setOffset(0);
     setHasMore(true);
-  }, [debouncedSearch, selectedCategory, selectedBrand, onlyOriginals, inStockOnly, sort]);
+  }, [debouncedSearch, selectedCategory, selectedBrand, onlyOriginals, showOutOfStock, sort]);
 
   // Fetch Categories ONCE on mount
   useEffect(() => {
@@ -116,7 +115,7 @@ export default function CatalogClient() {
       const params = new URLSearchParams({
         limit: limit.toString(),
         offset: currentOffset.toString(),
-        inStockOnly: inStockOnly ? 'true' : 'false'
+        inStockOnly: showOutOfStock ? 'false' : 'true'
       });
 
       if (debouncedSearch) params.append('search', debouncedSearch);
@@ -156,7 +155,7 @@ export default function CatalogClient() {
       setIsLoading(false);
       setIsFetchingMore(false);
     }
-  }, [debouncedSearch, selectedCategory, selectedBrand, onlyOriginals, inStockOnly]);
+  }, [debouncedSearch, selectedCategory, selectedBrand, onlyOriginals, showOutOfStock]);
 
   // Initial fetch and on filter changes
   useEffect(() => {
@@ -306,10 +305,10 @@ export default function CatalogClient() {
               <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
-                  checked={inStockOnly}
-                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  checked={showOutOfStock}
+                  onChange={(e) => setShowOutOfStock(e.target.checked)}
                 />
-                Только товары в наличии
+                Нет в наличии
               </label>
             </div>
           </div>
