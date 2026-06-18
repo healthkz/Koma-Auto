@@ -104,6 +104,39 @@
   animation: fadeIn 0.3s ease;
 }
 
+.consentGroup {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 10px;
+  margin-bottom: 4px;
+}
+
+.consentCheckbox {
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+  accent-color: #203c6e;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.consentText {
+  font-size: 13px;
+  color: var(--color-dark-gray);
+  line-height: 1.4;
+}
+
+.consentLink {
+  color: #2563eb;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.consentLink:hover {
+  color: var(--color-navy);
+}
+
 .forgotPassword {
   text-align: right;
   font-size: 14px;

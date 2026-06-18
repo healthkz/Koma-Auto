@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useToastStore } from '../../store/useToastStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { 
@@ -32,6 +33,7 @@ export default function ProfileClient() {
   const [isNameInitialized, setIsNameInitialized] = useState(false);
   const [completePassword, setCompletePassword] = useState('');
   const [completeConfirmPassword, setCompleteConfirmPassword] = useState('');
+  const [isConsentAccepted, setIsConsentAccepted] = useState(false);
   
   // Edit state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -80,6 +82,11 @@ export default function ProfileClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (activeTab === 'register' && !isConsentAccepted) {
+      addToast('Необходимо принять условия Пользовательского соглашения и Политики конфиденциальности', 'error');
+      return;
+    }
 
     // Custom empty field validation
     const newErrors: {name?: string, dob?: string, email?: string, password?: string, confirmPassword?: string} = {};
@@ -235,6 +242,11 @@ export default function ProfileClient() {
   const handleCompleteRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    if (!isConsentAccepted) {
+      addToast('Необходимо принять условия Пользовательского соглашения и Политики конфиденциальности', 'error');
+      return;
+    }
     
     const newErrors: {name?: string, dob?: string, password?: string, confirmPassword?: string} = {};
     let hasEmptyFields = false;
@@ -284,6 +296,7 @@ export default function ProfileClient() {
       
       await setDoc(doc(db, 'users', user.uid), profileData);
       setUserProfile(profileData as any);
+      setIsLogoutModalOpen(false);
       addToast('Регистрация успешно завершена!', 'success');
     } catch (error) {
       console.error('Error completing registration:', error);
@@ -458,6 +471,19 @@ export default function ProfileClient() {
                 </select>
               </div>
 
+              <div className={styles.consentGroup}>
+                <input 
+                  type="checkbox" 
+                  id="consent-complete" 
+                  className={styles.consentCheckbox}
+                  checked={isConsentAccepted}
+                  onChange={(e) => setIsConsentAccepted(e.target.checked)}
+                />
+                <label htmlFor="consent-complete" className={styles.consentText}>
+                  Я принимаю условия <Link href="/terms-of-service" className={styles.consentLink} target="_blank">Пользовательского соглашения</Link> и <Link href="/privacy-policy" className={styles.consentLink} target="_blank">Политики конфиденциальности</Link>, а также даю согласие на обработку персональных данных.
+                </label>
+              </div>
+
               <button 
                 type="submit" 
                 className={styles.submitBtn}
@@ -501,7 +527,7 @@ export default function ProfileClient() {
             <h1 className={styles.dashboardTitle}>Личный кабинет</h1>
             <p className={styles.dashboardSubtitle}>Добро пожаловать, {userProfile.name || user.displayName || 'Пользователь'}!</p>
           </div>
-          <button className={styles.logoutBtn} onClick={() => setIsLogoutModalOpen(true)}>
+          <button type="button" className={styles.logoutBtn} onClick={() => setIsLogoutModalOpen(true)}>
             <LogOut size={16} />
             Выйти
           </button>
@@ -827,6 +853,21 @@ export default function ProfileClient() {
             <a href="#" className={styles.forgotPassword} onClick={(e) => e.preventDefault()}>
               Забыли пароль?
             </a>
+          )}
+
+          {activeTab === 'register' && (
+            <div className={styles.consentGroup}>
+              <input 
+                type="checkbox" 
+                id="consent-main" 
+                className={styles.consentCheckbox}
+                checked={isConsentAccepted}
+                onChange={(e) => setIsConsentAccepted(e.target.checked)}
+              />
+              <label htmlFor="consent-main" className={styles.consentText}>
+                Я принимаю условия <Link href="/terms-of-service" className={styles.consentLink} target="_blank">Пользовательского соглашения</Link> и <Link href="/privacy-policy" className={styles.consentLink} target="_blank">Политики конфиденциальности</Link>, а также даю согласие на обработку персональных данных.
+              </label>
+            </div>
           )}
 
           <button 
