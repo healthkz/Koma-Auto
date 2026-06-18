@@ -592,10 +592,10 @@ export default function ProfileClient() {
           </button>
         </div>
 
-        <div className={styles.dashboardGrid}>
-          {/* Main Info Column */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div className={styles.infoCard}>
+        <div className={styles.dashboardLayout}>
+          <div className={styles.dashboardTopRow}>
+            {/* Main Info Column */}
+            <div className={`${styles.infoCard} ${styles.flexCard}`}>
               <div className={styles.infoCardTitle} style={{ justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <UserIcon size={20} />
@@ -629,11 +629,9 @@ export default function ProfileClient() {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Secondary Column */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div className={styles.infoCard}>
+            {/* Secondary Column */}
+            <div className={`${styles.infoCard} ${styles.flexCard}`}>
               <h2 className={styles.infoCardTitle}>
                 <Briefcase size={20} />
                 Статус аккаунта
@@ -660,17 +658,17 @@ export default function ProfileClient() {
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className={styles.infoCard}>
-              <h2 className={styles.infoCardTitle} style={{ borderBottom: 'none', marginBottom: '0' }}>
-                <Package size={20} />
-                Мои заказы
-              </h2>
-              <div className={styles.emptyState}>
-                <Package size={40} color="#dcdfe6" style={{ marginBottom: '12px' }} />
-                <p>У вас пока нет заказов</p>
-                <span style={{ fontSize: '13px', marginTop: '4px' }}>История появится здесь после первой покупки</span>
-              </div>
+          <div className={styles.infoCard}>
+            <h2 className={styles.infoCardTitle} style={{ borderBottom: 'none', marginBottom: '0' }}>
+              <Package size={20} />
+              Мои заказы
+            </h2>
+            <div className={styles.emptyState}>
+              <Package size={40} color="#dcdfe6" style={{ marginBottom: '12px' }} />
+              <p>У вас пока нет заказов</p>
+              <span style={{ fontSize: '13px', marginTop: '4px' }}>История появится здесь после первой покупки</span>
             </div>
           </div>
         </div>

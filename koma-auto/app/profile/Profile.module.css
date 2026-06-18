@@ -384,10 +384,21 @@
   border-color: #fecaca;
 }
 
-.dashboardGrid {
+.dashboardLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dashboardTopRow {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 24px;
+  align-items: stretch;
+}
+
+.flexCard {
+  height: 100%;
 }
 
 .infoCard {
@@ -528,7 +539,7 @@
 }
 
 @media (max-width: 768px) {
-  .dashboardGrid {
+  .dashboardTopRow {
     grid-template-columns: 1fr;
   }
 }
