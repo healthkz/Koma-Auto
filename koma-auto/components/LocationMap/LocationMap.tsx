@@ -81,25 +81,25 @@ export default function LocationMap() {
             <Image src="/img/Banks-Logo/visa-1960x622.png" alt="Visa" width={80} height={25} className={styles.paymentLogo} />
           </div>
           <div className={styles.paymentCard}>
-            <Image src="/img/Banks-Logo/mastercard-1280x527.png" alt="Mastercard" width={60} height={25} className={styles.paymentLogo} />
+            <Image src="/img/Banks-Logo/mastercard-1280x527.png" alt="Mastercard" width={102} height={43} className={styles.paymentLogo} />
           </div>
           <div className={styles.paymentCard}>
             <Image src="/img/Banks-Logo/halyk-674x184.png" alt="Halyk Bank" width={80} height={22} className={styles.paymentLogo} />
           </div>
           <div className={styles.paymentCard}>
-            <Image src="/img/Banks-Logo/kaspi-1100x300.png" alt="Kaspi.kz" width={80} height={22} className={styles.paymentLogo} />
+            <Image src="/img/Banks-Logo/kaspi-1100x300.png" alt="Kaspi.kz" width={132} height={36} className={styles.paymentLogo} />
           </div>
           <div className={styles.paymentCard}>
-            <Image src="/img/Banks-Logo/unionpay-1280x853.png" alt="UnionPay" width={45} height={30} className={styles.paymentLogo} />
+            <Image src="/img/Banks-Logo/unionpay-1280x853.png" alt="UnionPay" width={59} height={39} className={styles.paymentLogo} />
           </div>
           <div className={styles.paymentCard}>
-            <Image src="/img/Banks-Logo/americanexpress-1920x1509.png" alt="American Express" width={40} height={30} className={styles.paymentLogo} />
+            <Image src="/img/Banks-Logo/americanexpress-1920x1509.png" alt="American Express" width={88} height={66} className={styles.paymentLogo} />
           </div>
           <div className={styles.paymentCard}>
-            <Image src="/img/Banks-Logo/apple-1200x630.png" alt="Apple Pay" width={55} height={28} className={styles.paymentLogo} />
+            <Image src="/img/Banks-Logo/apple-1200x630.png" alt="Apple Pay" width={83} height={42} className={styles.paymentLogo} />
           </div>
           <div className={styles.paymentCard}>
-            <Image src="/img/Banks-Logo/google-280x280.png" alt="Google Pay" width={40} height={40} className={styles.paymentLogo} />
+            <Image src="/img/Banks-Logo/google-280x280.png" alt="Google Pay" width={72} height={72} className={styles.paymentLogo} />
           </div>
           <div className={styles.paymentCard}>
             <Image src="/img/Banks-Logo/samsung-510x528.png" alt="Samsung Pay" width={60} height={60} className={styles.paymentLogo} />
