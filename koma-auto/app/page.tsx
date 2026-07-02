@@ -7,6 +7,7 @@ import { getProducts, mapMoySkladToProduct } from '../lib/moysklad';
 import { Product } from '../data/products';
 import SideSlider from '../components/SideSlider/SideSlider';
 import HomeConsultationForm from '../components/HomeConsultationForm/HomeConsultationForm';
+import LocationMap from '../components/LocationMap/LocationMap';
 
 export const revalidate = 3600; // Revalidate every hour to shuffle featured products
 
@@ -124,6 +125,9 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {/* Location Map and Hours Section */}
+        <LocationMap />
 
       </div>
     </div>

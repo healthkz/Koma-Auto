@@ -6,10 +6,16 @@ import Image from 'next/image';
 import { Trash2, ArrowRight, Heart, Grid2x2, Rows3 } from 'lucide-react';
 import { useCartStore } from '../../store/useCartStore';
 import { useFavoritesStore } from '../../store/useFavoritesStore';
+import { useAuthStore } from '../../store/useAuthStore';
+import { useToastStore } from '../../store/useToastStore';
+import { useRouter } from 'next/navigation';
 import ProductCard from '../../components/ProductCard/ProductCard';
 import styles from './Cart.module.css';
 
 export default function CartClient() {
+  const router = useRouter();
+  const { user } = useAuthStore();
+  const { addToast } = useToastStore();
   const { items, removeItem, updateQuantity, clearCart, getTotalPrice } = useCartStore();
   const { toggleFavorite, isFavorite, items: favoriteItems } = useFavoritesStore();
 
@@ -252,9 +258,18 @@ export default function CartClient() {
             <span className={styles.totalPrice}>{totalPrice.toLocaleString()} ₸</span>
           </div>
 
-          <Link href="/checkout" className={styles.checkoutBtn}>
+          <button 
+            className={styles.checkoutBtn} 
+            onClick={() => {
+              if (!user) {
+                addToast('Чтобы заказывать товары, зарегистрируйтесь/войдите в аккаунт.', 'error');
+              } else {
+                router.push('/checkout');
+              }
+            }}
+          >
             Перейти к оформлению <ArrowRight size={20} />
-          </Link>
+          </button>
         </div>
       </div>
       

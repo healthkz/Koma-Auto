@@ -1,0 +1,174 @@
+.wrapper {
+  background-color: var(--color-white);
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  display: flex;
+  gap: 32px;
+  align-items: stretch;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.mapCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-navy);
+  margin-bottom: 16px;
+}
+
+.mapFrame {
+  flex: 1;
+  width: 100%;
+  min-height: 250px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid #E2E8F0;
+}
+
+.infoCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.address {
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--color-navy);
+  margin-bottom: 24px;
+  line-height: 1.4;
+}
+
+.hoursGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 24px;
+  align-items: start;
+}
+
+.hoursColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.hoursItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.day {
+  font-weight: 600;
+  color: var(--color-navy);
+  font-size: 16px;
+}
+
+.time {
+  color: var(--color-dark-gray);
+  font-size: 16px;
+}
+
+.paymentSection {
+  background-color: var(--color-white);
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  margin-bottom: 40px;
+}
+
+.paymentTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-navy);
+  margin-bottom: 24px;
+}
+
+.paymentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+.paymentCard {
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+  background-color: var(--color-white);
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.paymentCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -200%;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 30%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0.05) 70%,
+    transparent 100%
+  );
+  transition: left 1.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.paymentCard:hover::before {
+  left: 200%;
+}
+
+.paymentCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(6, 15, 72, 0.05);
+}
+
+.paymentLogo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.paymentCard:hover .paymentLogo {
+  transform: scale(1.05);
+}
+
+@media (max-width: 992px) {
+  .wrapper {
+    flex-direction: column;
+    padding: 24px;
+  }
+  
+  .hoursGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 576px) {
+  .hoursGrid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -33,6 +33,15 @@ export default function Footer() {
         </div>
 
         <div className={styles.column}>
+          <h3 className={styles.title}>Юридическая информация</h3>
+          <ul className={styles.list}>
+            <li><Link href="/terms-of-service">Пользовательское соглашение</Link></li>
+            <li><Link href="/privacy-policy">Политика конфиденциальности</Link></li>
+            <li><Link href="/terms-of-service">Договор оферты</Link></li>
+          </ul>
+        </div>
+
+        <div className={styles.column}>
           <h3 className={styles.title}>Контакты</h3>
           <ul className={styles.contactList}>
             <li>
@@ -52,7 +61,7 @@ export default function Footer() {
       </div>
       <div className={styles.bottom}>
         <div className="container">
-          <p>&copy; {new Date().getFullYear()} Koma.kz. Все права защищены.</p>
+          <p>&copy; {new Date().getFullYear()} ИП «KAMOLDIN», ИИН 860516303365. Все права защищены.</p>
         </div>
       </div>
     </footer>
