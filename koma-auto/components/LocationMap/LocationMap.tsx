@@ -83,9 +83,9 @@ export default function LocationMap() {
           <div className={styles.paymentCard}>
             <Image src="/img/Banks-Logo/mastercard-1280x527.png" alt="Mastercard" width={102} height={43} className={styles.paymentLogo} />
           </div>
-          <div className={styles.paymentCard}>
+          <a href="https://halykbank.kz/business/payment/epay" target="_blank" rel="noopener noreferrer" className={styles.paymentCard}>
             <Image src="/img/Banks-Logo/halyk-674x184.png" alt="Halyk Bank" width={80} height={22} className={styles.paymentLogo} />
-          </div>
+          </a>
           <div className={styles.paymentCard}>
             <Image src="/img/Banks-Logo/kaspi-1100x300.png" alt="Kaspi.kz" width={132} height={36} className={styles.paymentLogo} />
           </div>

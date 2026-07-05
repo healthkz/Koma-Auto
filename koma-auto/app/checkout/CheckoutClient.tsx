@@ -267,7 +267,7 @@ export default function CheckoutClient() {
             {formData.paymentMethod === 'online' && (
               <div className={styles.securityText}>
                 <Shield size={16} color="var(--color-success)" style={{ minWidth: '16px' }} />
-                <span>Оплата производится через защищенный платежный шлюз Halyk ePay/Kaspi Pay</span>
+                <span>Оплата производится через защищенный платежный шлюз Halyk ePay/Kaspi Pay с поддержкой технологии 3D Secure</span>
               </div>
             )}
           </div>
