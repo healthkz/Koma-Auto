@@ -339,3 +339,72 @@
     padding: 20px;
   }
 }
+
+.cityInputWrapper {
+  position: relative;
+}
+
+.cityModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+}
+
+.cityDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 600px;
+  background: var(--color-white);
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.cityGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cityLetter {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-navy);
+  margin-bottom: 4px;
+}
+
+.cityItem {
+  color: #559ad1;
+  cursor: pointer;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.cityItem:hover {
+  color: var(--color-navy);
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .cityDropdown {
+    width: calc(100vw - 64px);
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .cityDropdown {
+    grid-template-columns: 1fr;
+  }
+}

@@ -8,18 +8,44 @@ import { useCartStore } from '../../store/useCartStore';
 import { useToastStore } from '../../store/useToastStore';
 import styles from './Checkout.module.css';
 
+const CITIES_LIST = [
+  "Актау", "Актобе", "Актюбинск", "Алматы", "Аркалык", "Астана", "Атбасар", "Атырау",
+  "Балхаш", "Боровое",
+  "Джамбул",
+  "Жезказган",
+  "Зайсан",
+  "Караганда", "Кокшетау", "Костанай", "Кызылорда",
+  "Павлодар", "Петропавловск",
+  "Риддер",
+  "Сарыагаш", "Семипалатинск",
+  "Талды-Корган", "Талдыкорган",
+  "Уральск", "Усть-Каменогорск",
+  "Шымкент",
+  "Экибастуз"
+];
+
+const groupedCities = CITIES_LIST.reduce((acc, city) => {
+  const letter = city[0].toUpperCase();
+  if (!acc[letter]) acc[letter] = [];
+  acc[letter].push(city);
+  return acc;
+}, {} as Record<string, string[]>);
+
+const sortedLetters = Object.keys(groupedCities).sort();
+
 export default function CheckoutClient() {
   const router = useRouter();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const { addToast } = useToastStore();
   const [isSuccess, setIsSuccess] = useState(false);
   const [errors, setErrors] = useState<{name?: string}>({});
+  const [isCityModalOpen, setIsCityModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
-    city: 'Алматы',
+    city: '',
     street: '',
     house: '',
     apartment: '',
@@ -45,19 +71,19 @@ export default function CheckoutClient() {
 
   const normalizedCity = formData.city.trim().toLowerCase();
 
-  if (normalizedCity.includes('алматы') && !normalizedCity.includes('область')) {
-    deliveryCost = 6500;
-  } else if (normalizedCity.includes('алматинская')) {
+  if (normalizedCity === '') {
+    deliveryCost = 0;
+    courierAvailable = true;
+  } else if (normalizedCity.includes('алматы') && !normalizedCity.includes('область')) {
+    if (totalPrice >= 75000) {
+      deliveryCost = 0;
+    } else {
+      deliveryCost = 6500;
+    }
+  } else {
     if (totalPrice < 150000) {
       courierAvailable = false;
-      courierMessage = 'Для доставки в этот регион закажите от 150.000 тенге. Доставка от этой суммы осуществляется бесплатнo';
-    } else {
-      deliveryCost = 0;
-    }
-  } else if (normalizedCity.includes('ташкент') || normalizedCity.includes('бишкек')) {
-    if (totalPrice < 200000) {
-      courierAvailable = false;
-      courierMessage = 'Для доставки в этот регион закажите от 200.000 тенге. Доставка от этой суммы осуществляется бесплатнo';
+      courierMessage = 'Для доставки в этот регион закажите от 150.000 тенге. Доставка от этой суммы осуществляется бесплатно';
     } else {
       deliveryCost = 0;
     }
@@ -175,9 +201,44 @@ export default function CheckoutClient() {
           <div className={styles.section}>
             <h2>2. Адрес доставки</h2>
             <div className={styles.formGrid}>
-              <div className={styles.inputGroup}>
+              <div className={`${styles.inputGroup} ${styles.cityInputWrapper}`}>
                 <label>Населенный пункт *</label>
-                <input required type="text" name="city" value={formData.city} onChange={handleChange} placeholder="Например: Алматы" />
+                <input 
+                  required 
+                  type="text" 
+                  name="city" 
+                  value={formData.city} 
+                  readOnly
+                  onClick={() => setIsCityModalOpen(true)}
+                  onFocus={() => setIsCityModalOpen(true)}
+                  placeholder="Выберите город" 
+                  autoComplete="off"
+                  style={{ cursor: 'pointer' }}
+                />
+                {isCityModalOpen && (
+                  <>
+                    <div className={styles.cityModalOverlay} onClick={() => setIsCityModalOpen(false)} />
+                    <div className={styles.cityDropdown}>
+                      {sortedLetters.map(letter => (
+                        <div key={letter} className={styles.cityGroup}>
+                          <div className={styles.cityLetter}>{letter}</div>
+                          {groupedCities[letter].map(city => (
+                            <div 
+                              key={city} 
+                              className={styles.cityItem}
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, city }));
+                                setIsCityModalOpen(false);
+                              }}
+                            >
+                              {city}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
               <div className={styles.inputGroup}>
                 <label>Улица / Микрорайон *</label>
@@ -224,12 +285,18 @@ export default function CheckoutClient() {
                 />
                 <div className={styles.radioContent}>
                   <span className={styles.radioTitle}>
-                    {normalizedCity.includes('алматы') && !normalizedCity.includes('область') ? 'Курьером до двери по г. Алматы' : 'Курьером до двери'}
+                    {normalizedCity === ''
+                      ? 'Курьером до дома'
+                      : normalizedCity.includes('алматы') && !normalizedCity.includes('область')
+                        ? 'Курьером до дома по г. Алматы'
+                        : 'Курьером по Республике Казахстан'}
                   </span>
                   <span className={styles.radioDesc}>
-                    {normalizedCity.includes('алматы') && !normalizedCity.includes('область')
-                      ? (deliveryCost === 0 ? 'Бесплатно' : `Стоимость: ${deliveryCost} ₸`) 
-                      : (courierAvailable ? 'Бесплатно' : courierMessage)}
+                    {normalizedCity === '' 
+                      ? 'Выберите город для расчета'
+                      : normalizedCity.includes('алматы') && !normalizedCity.includes('область')
+                        ? '6500 тенге, при сумме корзины 75000 тенге доставка по г. Алматы бесплатно' 
+                        : (courierAvailable ? 'Доставка от суммы корзины 150.000 тенге осуществляется бесплатно' : courierMessage)}
                   </span>
                 </div>
               </label>
@@ -264,7 +331,7 @@ export default function CheckoutClient() {
                       onChange={handleChange}
                     />
                     <div className={styles.radioContent}>
-                      <span className={styles.radioTitle}>Картой при получении</span>
+                      <span className={styles.radioTitle}>Halyk QR/Kaspi QR при получении со склада</span>
                     </div>
                   </label>
                   <label className={styles.radioCard}>
@@ -325,7 +392,7 @@ export default function CheckoutClient() {
               {formData.deliveryMethod === 'courier' ? (
                 <div className={styles.calcRow}>
                   <span>Доставка</span>
-                  <span>{deliveryCost === 0 ? 'Бесплатно' : `${deliveryCost.toLocaleString()} ₸`}</span>
+                  <span>{normalizedCity === '' ? '-' : (deliveryCost === 0 ? 'Бесплатно' : `${deliveryCost.toLocaleString()} ₸`)}</span>
                 </div>
               ) : (
                 <div className={styles.calcRow}>
