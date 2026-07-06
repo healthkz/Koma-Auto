@@ -20,9 +20,14 @@ export default function CheckoutClient() {
     phone: '',
     email: '',
     city: 'Алматы',
+    street: '',
+    house: '',
+    apartment: '',
+    entrance: '',
+    postalCode: '',
+    comment: '',
     deliveryMethod: 'courier',
-    address: '',
-    paymentMethod: 'card',
+    paymentMethod: 'online',
   });
 
   const [agreements, setAgreements] = useState({
@@ -38,16 +43,18 @@ export default function CheckoutClient() {
   let courierAvailable = true;
   let courierMessage = '';
 
-  if (formData.city === 'Алматы') {
+  const normalizedCity = formData.city.trim().toLowerCase();
+
+  if (normalizedCity.includes('алматы') && !normalizedCity.includes('область')) {
     deliveryCost = 6500;
-  } else if (formData.city === 'Алматинская область') {
+  } else if (normalizedCity.includes('алматинская')) {
     if (totalPrice < 150000) {
       courierAvailable = false;
       courierMessage = 'Для доставки в этот регион закажите от 150.000 тенге. Доставка от этой суммы осуществляется бесплатнo';
     } else {
       deliveryCost = 0;
     }
-  } else if (formData.city === 'Ташкент' || formData.city === 'Бишкек') {
+  } else if (normalizedCity.includes('ташкент') || normalizedCity.includes('бишкек')) {
     if (totalPrice < 200000) {
       courierAvailable = false;
       courierMessage = 'Для доставки в этот регион закажите от 200.000 тенге. Доставка от этой суммы осуществляется бесплатнo';
@@ -162,20 +169,49 @@ export default function CheckoutClient() {
                 <label>E-mail</label>
                 <input type="email" name="email" value={formData.email} onChange={handleChange} />
               </div>
-              <div className={styles.inputGroup}>
-                <label>Город *</label>
-                <select name="city" value={formData.city} onChange={handleChange} className={styles.citySelect}>
-                  <option value="Алматы">Алматы</option>
-                  <option value="Алматинская область">Алматинская область</option>
-                  <option value="Ташкент">Ташкент</option>
-                  <option value="Бишкек">Бишкек</option>
-                </select>
-              </div>
             </div>
           </div>
 
           <div className={styles.section}>
-            <h2>2. Способ доставки</h2>
+            <h2>2. Адрес доставки</h2>
+            <div className={styles.formGrid}>
+              <div className={styles.inputGroup}>
+                <label>Населенный пункт *</label>
+                <input required type="text" name="city" value={formData.city} onChange={handleChange} placeholder="Например: Алматы" />
+              </div>
+              <div className={styles.inputGroup}>
+                <label>Улица / Микрорайон *</label>
+                <input required type="text" name="street" value={formData.street} onChange={handleChange} />
+              </div>
+              <div className={styles.inputGroup}>
+                <label>Дом / Здание *</label>
+                <input required type="text" name="house" value={formData.house} onChange={handleChange} />
+              </div>
+              <div className={styles.inputGroup}>
+                <label>Квартира / Офис *</label>
+                <input required type="text" name="apartment" value={formData.apartment} onChange={handleChange} />
+              </div>
+            </div>
+            
+            <h3 className={styles.subHeading} style={{ marginTop: '24px', marginBottom: '16px', fontSize: '18px', fontWeight: '500', color: 'var(--color-navy)' }}>Дополнительные данные</h3>
+            <div className={styles.formGrid}>
+              <div className={styles.inputGroup}>
+                <label>Подъезд / Код / Этаж</label>
+                <input type="text" name="entrance" value={formData.entrance} onChange={handleChange} />
+              </div>
+              <div className={styles.inputGroup}>
+                <label>Почтовый индекс</label>
+                <input type="text" name="postalCode" value={formData.postalCode} onChange={handleChange} />
+              </div>
+            </div>
+            <div className={styles.inputGroup} style={{ marginTop: '16px' }}>
+              <label>Комментарий для курьера</label>
+              <textarea name="comment" value={formData.comment} onChange={handleChange} rows={2} />
+            </div>
+          </div>
+
+          <div className={styles.section}>
+            <h2>3. Способ доставки</h2>
             <div className={styles.radioGroup}>
               <label className={`${styles.radioCard} ${!courierAvailable ? styles.disabledCard : ''}`}>
                 <input
@@ -187,9 +223,11 @@ export default function CheckoutClient() {
                   disabled={!courierAvailable}
                 />
                 <div className={styles.radioContent}>
-                  <span className={styles.radioTitle}>Курьером до двери</span>
+                  <span className={styles.radioTitle}>
+                    {normalizedCity.includes('алматы') && !normalizedCity.includes('область') ? 'Курьером до двери по г. Алматы' : 'Курьером до двери'}
+                  </span>
                   <span className={styles.radioDesc}>
-                    {formData.city === 'Алматы' 
+                    {normalizedCity.includes('алматы') && !normalizedCity.includes('область')
                       ? (deliveryCost === 0 ? 'Бесплатно' : `Стоимость: ${deliveryCost} ₸`) 
                       : (courierAvailable ? 'Бесплатно' : courierMessage)}
                   </span>
@@ -205,21 +243,15 @@ export default function CheckoutClient() {
                 />
                 <div className={styles.radioContent}>
                   <span className={styles.radioTitle}>Самовывоз</span>
-                  <span className={styles.radioDesc}>Из нашего магазина. Бесплатно.</span>
+                  <span className={styles.radioDesc}>Из нашего магазина в городе Алматы, торговом центре Car City. Бесплатно.</span>
                 </div>
               </label>
             </div>
 
-            {formData.deliveryMethod === 'courier' && (
-              <div className={styles.inputGroup} style={{ marginTop: '24px' }}>
-                <label>Адрес доставки *</label>
-                <textarea required name="address" value={formData.address} onChange={handleChange} rows={3} />
-              </div>
-            )}
           </div>
 
           <div className={styles.section}>
-            <h2>3. Способ оплаты</h2>
+            <h2>4. Способ оплаты</h2>
             <div className={styles.radioGroup}>
               {formData.deliveryMethod === 'pickup' ? (
                 <>
