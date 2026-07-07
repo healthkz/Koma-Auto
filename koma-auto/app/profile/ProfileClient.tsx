@@ -157,6 +157,7 @@ export default function ProfileClient() {
     try {
       if (activeTab === 'login') {
         await signInWithEmailAndPassword(auth, email, password);
+        sessionStorage.setItem('koma-just-logged-in', 'true');
         addToast('Вы успешно вошли в аккаунт!', 'success');
         setEmail('');
         setPassword('');
@@ -180,6 +181,7 @@ export default function ProfileClient() {
         await setDoc(doc(db, 'users', user.uid), profileData);
         setUserProfile(profileData as any);
 
+        sessionStorage.setItem('koma-just-logged-in', 'true');
         addToast('Аккаунт успешно создан!', 'success');
         setEmail('');
         setPassword('');
@@ -211,6 +213,7 @@ export default function ProfileClient() {
       // The Header listener will fetch the doc, find it missing, and set userProfile to null,
       // which will trigger the "incomplete registration" form.
 
+      sessionStorage.setItem('koma-just-logged-in', 'true');
       addToast('Вы успешно вошли через Google!', 'success');
     } catch (error: any) {
       console.error('Google Auth Error:', error);

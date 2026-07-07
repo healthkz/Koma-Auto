@@ -25,7 +25,7 @@ export default async function Home() {
   }
 
   const originalParts = [
-    { name: 'Топливный насос высокого давления', img: '/img/Original-products-page-images/Originals1.png', searchQuery: 'Топливный насос высокого давления' },
+    { name: 'Топливный насос высокого давления', img: '/img/Original-products-page-images/Originals1.png', searchQuery: 'Топливный насос' },
     { name: 'Свечи зажигания', img: '/img/Original-products-page-images/Originals2.png', searchQuery: 'Свечи зажигание' },
     { name: 'Форсунки впрыска топлива', img: '/img/Original-products-page-images/Originals3.png', searchQuery: 'Форсунка' },
     { name: 'Датчики ABS', img: '/img/Original-products-page-images/Originals4.png', searchQuery: 'Датчик ABS' },
