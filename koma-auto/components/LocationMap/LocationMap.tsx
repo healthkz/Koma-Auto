@@ -26,8 +26,8 @@ export default function LocationMap() {
         </div>
         <div className={styles.infoCol}>
           <div className={styles.address}>
-            2GIS: Алматы, Ауэзовский район, Микрорайон Баянауыл 57а,
-            ТЦ Car City
+            2GIS: Республика Казахстан, г. Алматы, Ауэзовский район, мкр. Баянауыл 57а,
+            ТЦ Car City, 1 ярус, 111 бутик
           </div>
           <div className={styles.hoursGrid}>
             <div className={styles.hoursColumn}>

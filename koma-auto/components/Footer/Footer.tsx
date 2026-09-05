@@ -45,23 +45,23 @@ export default function Footer() {
           <h3 className={styles.title}>Контакты</h3>
           <ul className={styles.contactList}>
             <li>
-              <Phone size={18} />
-              <a href="tel:+77771723377">+7 777 172 3377</a>
+              <Phone size={18} className={styles.contactIcon} />
+              <a href="tel:+77079194462">+7 707 919 4462</a>
             </li>
             <li>
-              <Mail size={18} />
+              <Mail size={18} className={styles.contactIcon} />
               <a href="mailto:koma.auto.kz@gmail.com">koma.auto.kz@gmail.com</a>
             </li>
             <li>
-              <MapPin size={18} />
-              <span>г. Алматы, ТЦ Car City, 4 ярус 172 бутик</span>
+              <MapPin size={18} className={styles.contactIcon} />
+              <span>Республика Казахстан, г. Алматы, ТЦ Car City, 1 ярус, 111 бутик</span>
             </li>
           </ul>
         </div>
       </div>
       <div className={styles.bottom}>
         <div className="container">
-          <p>&copy; {new Date().getFullYear()} ИП «KAMOLDIN», ИИН 860516303365. Все права защищены.</p>
+          <p>&copy; {new Date().getFullYear()} Koma.kz &middot; ИП «KAMOLDIN», ИИН 860516303365. Все права защищены.</p>
         </div>
       </div>
     </footer>

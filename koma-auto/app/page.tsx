@@ -109,7 +109,7 @@ export default async function Home() {
                   <MapPin size={32} className={styles.locationIcon} />
                   <div className={styles.locationText}>
                     <strong>Наше местоположение:</strong>
-                    <span>г. Алматы, ТЦ Car City, 172 Бутик, <br className={styles.desktopBr} /> 4 Ярус</span>
+                    <span>г. Алматы, ТЦ Car City, 111 Бутик, <br className={styles.desktopBr} /> 1 Ярус</span>
                   </div>
                 </div>
                 <div className={styles.carCityLogoWrapper}>

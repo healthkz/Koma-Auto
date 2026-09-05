@@ -34,3 +34,21 @@
 .legalPage li {
   margin-bottom: 8px;
 }
+
+.requisitesBlock {
+  background-color: var(--color-light-bg, #f8f9fa);
+  border: 1px solid var(--color-light-gray, #e5e7eb);
+  border-radius: 8px;
+  padding: 24px;
+  margin-top: 16px;
+}
+
+.requisitesBlock p {
+  margin-bottom: 10px;
+  font-size: 15px;
+  color: var(--color-navy);
+}
+
+.requisitesBlock p:last-child {
+  margin-bottom: 0;
+}
